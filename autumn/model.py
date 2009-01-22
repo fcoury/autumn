@@ -27,6 +27,17 @@ class ModelBase(type):
     
     '''
     def __new__(cls, name, bases, attrs):
+        def __pluralize(name):
+            return name + 's'
+            
+        def __to_table(name):
+            table = name[0].lower()
+            for i in range(len(name)-1):
+                if name[i+1].isupper():
+                    table += '_'
+                table += name[i+1].lower()
+            return table
+
         if name == 'Model':
             return super(ModelBase, cls).__new__(cls, name, bases, attrs)
             
@@ -35,8 +46,9 @@ class ModelBase(type):
         if not getattr(new_class, 'Meta', None):
             new_class.Meta = Empty
         
+        new_class.Meta.raw_name = __to_table(name)
         if not getattr(new_class.Meta, 'table', None):
-            new_class.Meta.table = name.lower()
+            new_class.Meta.table = __pluralize(new_class.Meta.raw_name)
         new_class.Meta.table_safe = escape(new_class.Meta.table)
         
         # Assume id is the default 
@@ -250,6 +262,17 @@ class Model(object):
 
         return Query(model=cls, conditions=kwargs)
         
+    @classmethod
+    def find(cls, _obj_pk=None, **kwargs):
+        query = None
+        
+        if _obj_pk is not None:
+            query = cls.get(**{cls.Meta.pk: _obj_pk})
+        else:
+            query = Query(model=cls, conditions=kwargs)
+            
+        if query and len(query) > 0:
+            return query[0]
         
     class ValidationError(Exception):
         pass

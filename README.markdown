@@ -10,6 +10,43 @@ It is released under the MIT License (see LICENSE file for details).
 
 This project is currently considered beta software.
 
+## Special additions of this branch
+
+Changes I made to the ORM inner workings:
+
+### 1. Table names are now pluralized by default
+
+I have implemented a default (and so far very weak) pluralization for table names, and replicated the Rails parsing method. 
+
+So now, this code:
+
+    class OrderItem(Model):
+		class Meta:
+			pass
+			
+would get tied to the `order_items` table, and not `orderitem` as it would on the master branch of autumn.
+
+### 2. Added find method that returns always a model instance, not a list
+
+On master branch, the only way to ask for models is through the get method. Right now `Model.get(id)` returns an instance of the model and `Model.get(attribute=attr_value)` returns a list of values.
+
+Again, in order to match something we have in Rails (sort-of anyways), I have created a similar method, `find()`, that does not return a list, so
+
+	author = Author.find(first_name='Alex')
+
+Will always return the *first* author whose name is "Alex". That is useful for not needing to do [0] expansion. This will be refactored on the future.
+
+### 3. Added support for WHERE..IN clause when values are arrays
+	
+This code:
+
+	a = Author.find(first_name=['Alex', 'Mike', 'Charles'])
+	b = Author.get(first_name=['Alex', 'Mike', 'Charles'])  
+
+Now renders the following SQL:
+
+	SELECT * FROM authors WHERE first_name IN ('Alex', 'Mike', 'Charles')
+
 ## MySQL Example
 
 Using these tables:
@@ -81,3 +118,4 @@ Creation
 ### Deleting
 
     a.delete()
+

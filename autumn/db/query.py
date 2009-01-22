@@ -131,10 +131,22 @@ class Query(object):
         
     def extract_condition_keys(self):
         if len(self.conditions):
-            return 'WHERE %s' % ' AND '.join("%s=%s" % (escape(k), self.db.conn.placeholder) for k in self.conditions)
+            conditions = []
+            for k in self.conditions:
+                if isinstance(self.conditions[k], list):
+                    conditions.append("%s IN %s" % (escape(k), "(%s)" % str(self.conditions[k])[1:-1]))
+                else:
+                    conditions.append("%s=%s" % (escape(k), self.db.conn.placeholder))
+                
+            return 'WHERE %s' % ' AND '.join(conditions)
         
     def extract_condition_values(self):
-        return list(self.conditions.itervalues())
+        values = []
+        for v in self.conditions.itervalues():
+            if not isinstance(v, list):
+                values.append(v)
+                
+        return values
         
     def query_template(self):
         return '%s FROM %s %s %s %s' % (
