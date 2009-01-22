@@ -10,7 +10,7 @@ It is released under the MIT License (see LICENSE file for details).
 
 This project is currently considered beta software.
 
-## Special additions of this branch
+## Special additions of this fork
 
 Changes I made to the ORM inner workings:
 
